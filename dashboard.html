@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEEJ.AI - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Momo Trust Display', 'Segoe UI', sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .navbar {
+            background-color: white;
+            padding: 0.25rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            height: 70px;
+            width: auto;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .username {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background-color: #00a651;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background-color: #008542;
+        }
+
+        .dashboard-container {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .welcome-message {
+            font-size: 2rem;
+            color: #00a651;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 1.75rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            height: 100%;
+            min-height: 450px; /* Ensure consistent height */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card-title i {
+            color: #00a651;
+            font-size: 1.1em;
+        }
+
+        .weather-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .weather-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .weather-temp {
+            font-size: 2.5rem;
+            font-weight: 500;
+            color: #00a651;
+        }
+
+        .weather-description {
+            text-transform: capitalize;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .weather-detail-item {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .analytics-table th,
+        .analytics-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .analytics-table th {
+            background: #f8f9fa;
+            font-weight: 500;
+        }
+
+        .map-container {
+            flex: 1;
+            width: 100%;
+            height: calc(100% - 60px); /* Adjust for header and controls */
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .map-placeholder {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .map-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .map-type-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #00a651;
+            background: white;
+            color: #00a651;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .map-type-btn.active {
+            background: #00a651;
+            color: white;
+        }
+
+        .map-type-btn:hover {
+            background: #00a651;
+            color: white;
+        }
+
+        /* AI Suggestions Styles */
+        .suggestions-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: 100%;
+        }
+
+        .suggestion-item {
+            background: #f8f9fa;
+            padding: 1.25rem;
+            border-radius: 8px;
+            border-left: 4px solid #00a651;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .suggestion-priority {
+            display: inline-block;
+            padding: 0.35rem 0.85rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .suggestion-priority.high {
+            background: #fde8e8;
+            color: #dc2626;
+        }
+
+        .suggestion-priority.medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .suggestion-priority.low {
+            background: #e0f2f1;
+            color: #00796b;
+        }
+
+        .suggestion-item p {
+            margin: 0;
+            color: #333;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .suggestion-item i {
+            margin-right: 0.75rem;
+            color: #00a651;
+        }
+
+        .suggestion-time {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: auto;
+        }
+
+        /* Map View adjustments */
+        .map-view-card {
+            grid-column: auto; /* Remove any span */
+            height: 100%;
+        }
+
+        /* Ensure both cards have same height */
+        .suggestions-container, .map-view-card {
+            height: 100%;
+            min-height: 450px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <img src="images/16441 (1).png" alt="BEEJ.AI Logo" class="logo">
+        <div class="user-info">
+            <span class="username">Welcome, FARMER1</span>
+            <a href="login.html" class="logout-btn">Logout</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <h1 class="welcome-message">Dashboard</h1>
+        
+        <div class="dashboard-grid">
+            <!-- Weather Updates -->
+            <div class="dashboard-card">
+                <h2 class="card-title">
+                    <i class="fas fa-cloud-sun"></i>
+                    Weather Updates - Navi Mumbai
+                    <span id="loading-indicator" style="margin-left: auto; font-size: 0.8em;">Fetching weather data...</span>
+                </h2>
+                <div class="weather-info">
+                    <div id="current-weather" class="weather-item">
+                        <div class="weather-main">
+                            <img id="weather-icon" src="" alt="Weather Icon" style="width: 64px; height: 64px;">
+                            <div>
+                                <div class="weather-temp" id="temperature">--°C</div>
+                                <div class="weather-description" id="description">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="weather-details">
+                        <div class="weather-detail-item">
+                            <h3>Humidity</h3>
+                            <p id="humidity">--%</p>
+                        </div>
+                        <div class="weather-detail-item">
+                            <h3>Wind Speed</h3>
+                            <p id="wind-speed">-- km/h</p>
+                        </div>
+                        <div class="weather-detail-item">
+                            <h3>Feels Like</h3>
+                            <p id="feels-like">--°C</p>
+                        </div>
+                        <div class="weather-detail-item">
+                            <h3>Pressure</h3>
+                            <p id="pressure">-- hPa</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics & Reports -->
+            <div class="dashboard-card">
+                <h2 class="card-title">
+                    <i class="fas fa-chart-line"></i>
+                    Analytics & Reports
+                </h2>
+                <table class="analytics-table">
+                    <thead>
+                        <tr>
+                            <th>Report Type</th>
+                            <th>Status</th>
+                            <th>Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Crop Health Analysis</td>
+                            <td>Complete</td>
+                            <td>Today 10:30 AM</td>
+                        </tr>
+                        <tr>
+                            <td>Soil Analysis</td>
+                            <td>In Progress</td>
+                            <td>Today 9:15 AM</td>
+                        </tr>
+                        <tr>
+                            <td>Pest Detection</td>
+                            <td>Complete</td>
+                            <td>Yesterday</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <canvas id="analyticsChart"></canvas>
+            </div>
+
+            <!-- AI Suggestions -->
+            <div class="dashboard-card">
+                <h2 class="card-title">
+                    <i class="fas fa-robot"></i>
+                    AI Suggestions
+                </h2>
+                <div class="suggestions-container">
+                    <div class="suggestion-item">
+                        <div class="suggestion-priority high">High Priority</div>
+                        <p><i class="fas fa-spray-can"></i> Spray pesticides in the northwest region - Pest activity detected</p>
+                        <span class="suggestion-time">2 hours ago</span>
+                    </div>
+                    <div class="suggestion-item">
+                        <div class="suggestion-priority medium">Medium Priority</div>
+                        <p><i class="fas fa-tint"></i> Increase irrigation in central plots - Soil moisture below optimal</p>
+                        <span class="suggestion-time">5 hours ago</span>
+                    </div>
+                    <div class="suggestion-item">
+                        <div class="suggestion-priority low">Low Priority</div>
+                        <p><i class="fas fa-seedling"></i> Consider crop rotation in eastern sector next season</p>
+                        <span class="suggestion-time">1 day ago</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map View -->
+            <div class="dashboard-card map-view-card">
+                <h2 class="card-title">
+                    <i class="fas fa-map"></i>
+                    Map View
+                </h2>
+                <div class="map-controls">
+                    <button class="map-type-btn active" data-map-type="topographic">
+                        <i class="fas fa-mountain"></i> Topographic Map
+                    </button>
+                    <button class="map-type-btn" data-map-type="thermal">
+                        <i class="fas fa-temperature-high"></i> Thermal Map
+                    </button>
+                    <button class="map-type-btn" data-map-type="geospatial">
+                        <i class="fas fa-globe"></i> Geospatial Map
+                    </button>
+                </div>
+                <div class="map-container">
+                    <img src="images/Screenshot 2025-11-02 at 5.23.29 AM.png" alt="Topographic Map" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+            </div>
+
+    </div>
+
+    <script>
+        // Check if user is logged in immediately when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!sessionStorage.getItem('loggedIn')) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Update username in navbar
+            const usernameElement = document.querySelector('.username');
+            if (usernameElement) {
+                usernameElement.textContent = 'Welcome, ' + sessionStorage.getItem('username');
+            }
+
+            // Handle logout
+            const logoutBtn = document.querySelector('.logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    sessionStorage.removeItem('loggedIn');
+                    sessionStorage.removeItem('username');
+                    window.location.href = 'login.html';
+                });
+            }
+
+            // Make initial weather API call and handle any errors
+            try {
+                await fetchWeatherData();
+            } catch (error) {
+                console.error('Initial weather fetch failed:', error);
+            }
+
+            // Set up periodic refresh
+            setInterval(fetchWeatherData, 300000); // Refresh every 5 minutes
+
+            // Initialize remaining charts
+            initializeCharts();
+
+            // Initialize map controls with the correct container
+            const mapButtons = document.querySelectorAll('.map-type-btn');
+            const mapContainer = document.querySelector('.map-container');
+            
+            mapButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    mapButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const mapType = this.dataset.mapType;
+                    
+                    if (mapType === 'topographic') {
+                        mapContainer.innerHTML = `
+                            <img 
+                                src="images/Screenshot 2025-11-02 at 5.42.56 AM.png" 
+                                alt="Topographic Map" 
+                                style="width: 100%; height: 100%; object-fit: contain;"
+                                onerror="console.error('Failed to load map image:', this.src);"
+                            >
+                        `;
+                    } else if (mapType === 'thermal') {
+                        mapContainer.innerHTML = `
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="fas fa-temperature-high" style="font-size: 3rem; color: #00a651; margin-bottom: 1rem;"></i>
+                                <p>Thermal Map View</p>
+                                <p style="color: #666; margin-top: 0.5rem;">Coming soon</p>
+                            </div>
+                        `;
+                    } else {
+                        mapContainer.innerHTML = `
+                            <div style="text-align: center; padding: 20px;">
+                                <i class="fas fa-globe" style="font-size: 3rem; color: #00a651; margin-bottom: 1rem;"></i>
+                                <p>Geospatial Map View</p>
+                                <p style="color: #666; margin-top: 0.5rem;">Coming soon</p>
+                            </div>
+                        `;
+                    }
+                });
+            });
+        });
+
+        async function fetchWeatherData() {
+            const loadingIndicator = document.getElementById('loading-indicator');
+            loadingIndicator.style.display = 'inline';
+            
+            // Coordinates for Navi Mumbai
+            const LATITUDE = '19.0330'; 
+            const LONGITUDE = '73.0297';
+            
+            try {
+                loadingIndicator.textContent = 'Fetching weather data...';
+                loadingIndicator.style.color = '#666';
+                
+                // Using Open-Meteo API which doesn't require authentication
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,surface_pressure&wind_speed_unit=kmh`;
+                console.log('Fetching weather data...');
+                
+                const response = await fetch(url);
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Error Response:', errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Weather data:', data);
+                
+                if (data.current) {
+                    // Update weather information
+                    document.getElementById('temperature').textContent = `${Math.round(data.current.temperature_2m)}°C`;
+                    document.getElementById('description').textContent = getWeatherDescription(data.current.temperature_2m);
+                    document.getElementById('humidity').textContent = `${Math.round(data.current.relative_humidity_2m)}%`;
+                    document.getElementById('wind-speed').textContent = `${data.current.wind_speed_10m.toFixed(1)} km/h`;
+                    document.getElementById('feels-like').textContent = `${Math.round(data.current.temperature_2m)}°C`;
+                    document.getElementById('pressure').textContent = `${Math.round(data.current.surface_pressure)} hPa`;
+                    
+                    // Update weather icon based on temperature and time
+                    const weatherIcon = document.getElementById('weather-icon');
+                    const hour = new Date().getHours();
+                    const isDay = hour >= 6 && hour < 18;
+                    weatherIcon.src = getWeatherIcon(data.current.temperature_2m, isDay);
+                    
+                    loadingIndicator.style.display = 'none';
+                } else {
+                    throw new Error('Invalid weather data format');
+                }
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
+                document.getElementById('description').textContent = 'Error loading weather data';
+                document.getElementById('temperature').textContent = '--°C';
+                loadingIndicator.textContent = `Failed to load weather data: ${error.message}`;
+                loadingIndicator.style.color = '#dc3545';
+                
+                // Clear other weather data
+                document.getElementById('humidity').textContent = '--%';
+                document.getElementById('wind-speed').textContent = '-- km/h';
+                document.getElementById('feels-like').textContent = '--°C';
+                document.getElementById('pressure').textContent = '-- hPa';
+            }
+        }
+
+        // Helper function to determine weather description based on temperature
+        function getWeatherDescription(temperature) {
+            if (temperature <= 10) return 'Cold';
+            if (temperature <= 20) return 'Cool';
+            if (temperature <= 25) return 'Pleasant';
+            if (temperature <= 30) return 'Warm';
+            return 'Hot';
+        }
+
+        // Helper function to get weather icon based on temperature and time of day
+        function getWeatherIcon(temperature, isDay) {
+            const baseUrl = 'https://openweathermap.org/img/wn/';
+            let iconCode = '';
+            
+            if (temperature <= 10) {
+                iconCode = isDay ? '01d' : '01n'; // cold
+            } else if (temperature <= 20) {
+                iconCode = isDay ? '02d' : '02n'; // cool
+            } else if (temperature <= 25) {
+                iconCode = isDay ? '03d' : '03n'; // pleasant
+            } else if (temperature <= 30) {
+                iconCode = isDay ? '04d' : '04n'; // warm
+            } else {
+                iconCode = isDay ? '10d' : '10n'; // hot
+            }
+            
+            return `${baseUrl}${iconCode}@2x.png`;
+        }
+
+        function initializeCharts() {
+            // Analytics Chart
+            const analyticsCtx = document.getElementById('analyticsChart').getContext('2d');
+            new Chart(analyticsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Healthy', 'Moderate', 'Needs Attention'],
+                    datasets: [{
+                        data: [70, 20, 10],
+                        backgroundColor: ['#00a651', '#ffc107', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+    </script>
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
+</body>
+</html>
