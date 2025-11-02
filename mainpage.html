@@ -599,12 +599,6 @@
         /* Chatbot styles continue below... */
     </style>
     <script>
-        // Check if this is the first visit
-        if (!sessionStorage.getItem('visited')) {
-            sessionStorage.setItem('visited', 'true');
-            window.location.href = 'login.html';
-        }
-
         // Chatbot functionality
         document.addEventListener('DOMContentLoaded', function() {
             const chatbotToggle = document.getElementById('chatbotToggle');
